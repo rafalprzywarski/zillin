@@ -130,4 +130,16 @@
             (check-rasterize-triangle [[0.75 -0.5] [4.75 -0.5] [2.5 2.25]] [6 3]
                 [0 1 1 1 0 0
                  0 0 1 0 0 0
-                 0 0 0 0 0 0]))))
+                 0 0 0 0 0 0])))
+    (testing "back-face culling"
+        (check-rasterize-triangle [[0.75 1.5] [2.5 4.25] [4.75 1.5]] [6 5]
+            [0 0 0 0 0 0
+             0 0 0 0 0 0
+             0 0 0 0 0 0
+             0 0 0 0 0 0
+             0 0 0 0 0 0]))
+    (testing "degenerate"
+        (check-rasterize-triangle [[0.75 0.75] [0.75 0.75] [2.75 1.5]] [3 3]
+            [0 0 0
+             0 0 0
+             0 0 0])))

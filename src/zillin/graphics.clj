@@ -19,29 +19,30 @@
     (ArrayFramebuffer. width height components (float-array (* width height components))))
 
 (defn rasterize-triangle! [fb x1 y1 x2 y2 x3 y3]
-    (let [edge-w (fn [x1 y1 x2 y2]
-                    (if (or (> y2 y1) (and (= y2 y1) (< x2 x1)))
-                        0.0
-                        (Math/nextDown 0.0)))
-          side (fn [x1 y1 x2 y2 xp yp]
-                  (- (* (- x2 x1) (- yp y1)) (* (- y2 y1) (- xp x1))))
-          lx (int (Math/floor (min x1 x2 x3)))
-          lx (max 0 lx)
-          ly (int (Math/floor (min y1 y2 y3)))
-          ly (max 0 ly)
-          ux (int (Math/ceil (max x1 x2 x3)))
-          ux (min (.width fb) ux)
-          uy (int (Math/ceil (max y1 y2 y3)))
-          uy (min (.height fb) uy)
-          ew1 (edge-w x2 y2 x3 y3)
-          ew2 (edge-w x3 y3 x1 y1)
-          ew3 (edge-w x1 y1 x2 y2)]
-         (doseq [y (range ly uy)]
-            (doseq [x (range lx ux)]
-                (let [xc (+ 0.5 x)
-                      yc (+ 0.5 y)
-                      w1 (side x2 y2 x3 y3 xc yc)
-                      w2 (side x3 y3 x1 y1 xc yc)
-                      w3 (side x1 y1 x2 y2 xc yc)]
-                    (when (and (> w1 ew1) (> w2 ew2) (> w3 ew3))
-                        (set-component! fb x y 0 1)))))))
+    (let [side (fn [x1 y1 x2 y2 xp yp]
+                (- (* (- x2 x1) (- yp y1)) (* (- y2 y1) (- xp x1))))]
+         (when (> (side x1 y1 x2 y2 x3 y3) 0.0)
+            (let [edge-w (fn [x1 y1 x2 y2]
+                            (if (or (> y2 y1) (and (= y2 y1) (< x2 x1)))
+                                0.0
+                                (Math/nextDown 0.0)))
+                  lx (int (Math/floor (min x1 x2 x3)))
+                  lx (max 0 lx)
+                  ly (int (Math/floor (min y1 y2 y3)))
+                  ly (max 0 ly)
+                  ux (int (Math/ceil (max x1 x2 x3)))
+                  ux (min (.width fb) ux)
+                  uy (int (Math/ceil (max y1 y2 y3)))
+                  uy (min (.height fb) uy)
+                  ew1 (edge-w x2 y2 x3 y3)
+                  ew2 (edge-w x3 y3 x1 y1)
+                  ew3 (edge-w x1 y1 x2 y2)]
+                 (doseq [y (range ly uy)]
+                    (doseq [x (range lx ux)]
+                        (let [xc (+ 0.5 x)
+                              yc (+ 0.5 y)
+                              w1 (side x2 y2 x3 y3 xc yc)
+                              w2 (side x3 y3 x1 y1 xc yc)
+                              w3 (side x1 y1 x2 y2 xc yc)]
+                            (when (and (> w1 ew1) (> w2 ew2) (> w3 ew3))
+                                (set-component! fb x y 0 1)))))))))
