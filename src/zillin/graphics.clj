@@ -20,13 +20,11 @@
 
 (defn rasterize-triangle! [fb x1 y1 x2 y2 x3 y3]
     (let [edge-w (fn [x1 y1 x2 y2]
-                    (let [dx (- x2 x1)
-                          dy (- y2 y1)]
-                         (if (or (> dy 0.0) (and (= dy 0.0) (< dx 0.0)))
-                            0.0
-                            (Math/nextDown 0.0))))
-          orient (fn [x1 y1 x2 y2 xp yp]
-                    (- (* (- x2 x1) (- yp y1)) (* (- y2 y1) (- xp x1))))
+                    (if (or (> y2 y1) (and (= y2 y1) (< x2 x1)))
+                        0.0
+                        (Math/nextDown 0.0)))
+          side (fn [x1 y1 x2 y2 xp yp]
+                  (- (* (- x2 x1) (- yp y1)) (* (- y2 y1) (- xp x1))))
           lx (int (Math/floor (min x1 x2 x3)))
           lx (max 0 lx)
           ly (int (Math/floor (min y1 y2 y3)))
@@ -42,8 +40,8 @@
             (doseq [x (range lx ux)]
                 (let [xc (+ 0.5 x)
                       yc (+ 0.5 y)
-                      w1 (orient x2 y2 x3 y3 xc yc)
-                      w2 (orient x3 y3 x1 y1 xc yc)
-                      w3 (orient x1 y1 x2 y2 xc yc)]
+                      w1 (side x2 y2 x3 y3 xc yc)
+                      w2 (side x3 y3 x1 y1 xc yc)
+                      w3 (side x1 y1 x2 y2 xc yc)]
                     (when (and (> w1 ew1) (> w2 ew2) (> w3 ew3))
                         (set-component! fb x y 0 1)))))))
