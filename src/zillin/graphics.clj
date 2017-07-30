@@ -18,10 +18,11 @@
 (defn create-framebuffer [width height components]
     (ArrayFramebuffer. width height components (float-array (* width height components))))
 
-(defn rasterize-triangle! [fb x1 y1 x2 y2 x3 y3]
-    (let [side (fn [x1 y1 x2 y2 xp yp]
-                (- (* (- x2 x1) (- yp y1)) (* (- y2 y1) (- xp x1))))]
-         (when (> (side x1 y1 x2 y2 x3 y3) 0.0)
+(defn rasterize-triangle! [fb shader x1 y1 x2 y2 x3 y3]
+    (let [double-area (fn [x1 y1 x2 y2 xp yp]
+                          (- (* (- x2 x1) (- yp y1)) (* (- y2 y1) (- xp x1))))
+          area (double-area x1 y1 x2 y2 x3 y3)]
+         (when (> area 0.0)
             (let [edge-w (fn [x1 y1 x2 y2]
                             (if (or (> y2 y1) (and (= y2 y1) (< x2 x1)))
                                 0.0
@@ -41,8 +42,8 @@
                     (doseq [x (range lx ux)]
                         (let [xc (+ 0.5 x)
                               yc (+ 0.5 y)
-                              w1 (side x2 y2 x3 y3 xc yc)
-                              w2 (side x3 y3 x1 y1 xc yc)
-                              w3 (side x1 y1 x2 y2 xc yc)]
+                              w1 (double-area x2 y2 x3 y3 xc yc)
+                              w2 (double-area x3 y3 x1 y1 xc yc)
+                              w3 (double-area x1 y1 x2 y2 xc yc)]
                             (when (and (> w1 ew1) (> w2 ew2) (> w3 ew3))
-                                (set-component! fb x y 0 1)))))))))
+                                (set-component! fb x y 0 (shader (/ w1 area) (/ w2 area) (/ w3 area)))))))))))

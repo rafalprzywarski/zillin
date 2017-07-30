@@ -39,8 +39,9 @@
             (is (= -3.25 (get-component fb 7 15 2))))))
 
 (defn- check-rasterize-triangle [[[x1 y1] [x2 y2] [x3 y3]] [w h] expected]
-    (let [fb (create-framebuffer w h 1)]
-        (rasterize-triangle! fb x1 y1 x2 y2 x3 y3)
+    (let [fb (create-framebuffer w h 1)
+          shader (fn [l1 l2 l3] (+ l1 l2 l3))]
+        (rasterize-triangle! fb shader x1 y1 x2 y2 x3 y3)
         (is (= (map double expected) (seq (.pixels fb))))))
 
 (deftest rasterize-triangle-test
@@ -143,3 +144,25 @@
             [0 0 0
              0 0 0
              0 0 0])))
+
+(deftest pixel-shading
+    (testing "barycentric coordinates"
+        (let [fb (create-framebuffer 4 4 1)]
+            (rasterize-triangle! fb (fn [l1 l2 l3] l1) 4 4 0 4 4 0)
+            (is (= [0.00 0.00 0.00 0.00
+                    0.00 0.00 0.00 0.25
+                    0.00 0.00 0.25 0.50
+                    0.00 0.25 0.50 0.75]
+                   (seq (.pixels fb))))
+            (rasterize-triangle! fb (fn [l1 l2 l3] l2) 4 4 0 4 4 0)
+            (is (= [0.000 0.000 0.000 0.125
+                    0.000 0.000 0.375 0.125
+                    0.000 0.625 0.375 0.125
+                    0.875 0.625 0.375 0.125]
+                   (seq (.pixels fb))))
+            (rasterize-triangle! fb (fn [l1 l2 l3] l3) 4 4 0 4 4 0)
+            (is (= [0.000 0.000 0.000 0.875
+                    0.000 0.000 0.625 0.625
+                    0.000 0.375 0.375 0.375
+                    0.125 0.125 0.125 0.125]
+                   (seq (.pixels fb)))))))
