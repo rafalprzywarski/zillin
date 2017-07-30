@@ -28,9 +28,13 @@
           orient (fn [x1 y1 x2 y2 xp yp]
                     (- (* (- x2 x1) (- yp y1)) (* (- y2 y1) (- xp x1))))
           lx (int (Math/floor (min x1 x2 x3)))
+          lx (max 0 lx)
           ly (int (Math/floor (min y1 y2 y3)))
+          ly (max 0 ly)
           ux (int (Math/ceil (max x1 x2 x3)))
+          ux (min (.width fb) ux)
           uy (int (Math/ceil (max y1 y2 y3)))
+          uy (min (.height fb) uy)
           ew1 (edge-w x2 y2 x3 y3)
           ew2 (edge-w x3 y3 x1 y1)
           ew3 (edge-w x1 y1 x2 y2)]

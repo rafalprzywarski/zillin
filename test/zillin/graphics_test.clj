@@ -106,4 +106,28 @@
             [0 0 0 0
              0 0 1 0
              0 1 1 0
-             0 0 0 0])))
+             0 0 0 0]))
+    (testing "clipping"
+        (testing "left"
+            (check-rasterize-triangle [[-1.25 1.5] [2.75 1.5] [0.5 4.25]] [4 5]
+                [0 0 0 0
+                 1 1 1 0
+                 1 1 0 0
+                 1 0 0 0
+                 0 0 0 0]))
+        (testing "right"
+            (check-rasterize-triangle [[0.75 1.5] [4.75 1.5] [2.5 4.25]] [3 5]
+                [0 0 0
+                 0 1 1
+                 0 1 1
+                 0 0 1
+                 0 0 0]))
+        (testing "top"
+            (check-rasterize-triangle [[0.75 1.5] [4.75 1.5] [2.5 4.25]] [6 2]
+                [0 0 0 0 0 0
+                 0 1 1 1 1 0]))
+        (testing "bottom"
+            (check-rasterize-triangle [[0.75 -0.5] [4.75 -0.5] [2.5 2.25]] [6 3]
+                [0 1 1 1 0 0
+                 0 0 1 0 0 0
+                 0 0 0 0 0 0]))))
