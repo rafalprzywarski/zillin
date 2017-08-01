@@ -5,6 +5,7 @@
   :dependencies [
                  [org.clojure/clojure "1.8.0"]
                  [proto-repl "0.3.1"]]
+  :global-vars {*warn-on-reflection* true}
   :main ^:skip-aot zillin.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

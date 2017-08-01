@@ -1,4 +1,3 @@
-(set! *warn-on-reflection* true)
 (ns zillin.math)
 
 (defrecord Vec3 [^float x ^float y ^float z])

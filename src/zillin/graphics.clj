@@ -1,21 +1,24 @@
 (ns zillin.graphics)
 
 (defprotocol Framebuffer
+    (framebuffer-width [this])
+    (framebuffer-height [this])
+    (framebuffer-components [this])
     (get-component [this x y i])
     (set-component! [this x y i val]))
-
-(defn- component-index [f x y i]
-    (+ i (* (+ x (* y (.width f))) (.components f))))
 
 (deftype ArrayFramebuffer
     [width height components pixels]
     Framebuffer
+    (framebuffer-width [this] (.width this))
+    (framebuffer-height [this] (.height this))
+    (framebuffer-components [this] (.components this))
     (get-component [this x y i]
-        (aget (.pixels this) (component-index this x y i)))
+        (aget ^floats (.pixels this) (+ i (* (+ x (* y (.width this))) (.components this)))))
     (set-component! [this x y i val]
-        (aset-float (.pixels this) (component-index this x y i) val)))
+        (aset-float (.pixels this) (+ i (* (+ x (* y (.width this))) (.components this))) val)))
 
-(defn create-framebuffer [width height components]
+(defn ^zillin.graphics.ArrayFramebuffer create-framebuffer [width height components]
     (ArrayFramebuffer. width height components (float-array (* width height components))))
 
 (defn rasterize-triangle! [fb shader x1 y1 x2 y2 x3 y3]
@@ -32,12 +35,13 @@
                   ly (int (Math/floor (min y1 y2 y3)))
                   ly (max 0 ly)
                   ux (int (Math/ceil (max x1 x2 x3)))
-                  ux (min (.width fb) ux)
+                  ux (min (framebuffer-width fb) ux)
                   uy (int (Math/ceil (max y1 y2 y3)))
-                  uy (min (.height fb) uy)
+                  uy (min (framebuffer-height fb) uy)
                   ew1 (edge-w x2 y2 x3 y3)
                   ew2 (edge-w x3 y3 x1 y1)
-                  ew3 (edge-w x1 y1 x2 y2)]
+                  ew3 (edge-w x1 y1 x2 y2)
+                  components (framebuffer-components fb)]
                  (doseq [y (range ly uy)]
                     (doseq [x (range lx ux)]
                         (let [xc (+ 0.5 x)
@@ -46,7 +50,6 @@
                               w2 (double-area x3 y3 x1 y1 xc yc)
                               w3 (double-area x1 y1 x2 y2 xc yc)]
                             (when (and (> w1 ew1) (> w2 ew2) (> w3 ew3))
-                                (let [components (.components fb)
-                                      vals (shader (/ w1 area) (/ w2 area) (/ w3 area))]
+                                (let [vals (shader (/ w1 area) (/ w2 area) (/ w3 area))]
                                     (dotimes [i components]
                                         (set-component! fb x y i (vals i))))))))))))

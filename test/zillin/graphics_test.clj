@@ -5,9 +5,9 @@
 (deftest framebuffer-test
     (testing "creation"
         (let [fb (create-framebuffer 16 32 3)]
-            (is (= 16 (.width fb)))
-            (is (= 32 (.height fb)))
-            (is (= 3 (.components fb)))))
+            (is (= 16 (framebuffer-width fb)))
+            (is (= 32 (framebuffer-height fb)))
+            (is (= 3 (framebuffer-components fb)))))
     (testing "component access"
         (let [fb (create-framebuffer 8 16 3)]
             (is (= 0.0 (get-component fb 0 0 0)))
