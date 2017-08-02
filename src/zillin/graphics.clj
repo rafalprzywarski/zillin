@@ -32,7 +32,7 @@
         0.0
         (Math/nextDown 0.0)))
 
-(defn rasterize-triangle! [fb shader x1 y1 x2 y2 x3 y3]
+(defn rasterize-triangle! [fb shader x1 y1 z1 x2 y2 z2 x3 y3 z3]
     (let [x1 ^double x1
           y1 ^double y1
           x2 ^double x2
