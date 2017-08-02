@@ -16,21 +16,32 @@
     (get-component [this x y i]
         (aget ^floats (.pixels this) (+ i (* (+ x (* y (.width this))) (.components this)))))
     (set-component! [this x y i val]
-        (aset-float (.pixels this) (+ i (* (+ x (* y (.width this))) (.components this))) val)))
+        (let [x ^int x
+              y ^int y
+              i ^int i]
+             (aset-float (.pixels this) (+ i (* (+ x (* y (.width this))) (.components this))) val))))
 
 (defn ^zillin.graphics.ArrayFramebuffer create-framebuffer [width height components]
     (ArrayFramebuffer. width height components (float-array (* width height components))))
 
+(defmacro double-area [x1 y1 x2 y2 xp yp]
+    `(- (* (- ~x2 ~x1) (- ~yp ~y1)) (* (- ~y2 ~y1) (- ~xp ~x1))))
+
+(defmacro edge-w [x1 y1 x2 y2]
+    `(if (or (> ~y2 ~y1) (and (= ~y2 ~y1) (< ~x2 ~x1)))
+        0.0
+        (Math/nextDown 0.0)))
+
 (defn rasterize-triangle! [fb shader x1 y1 x2 y2 x3 y3]
-    (let [double-area (fn [x1 y1 x2 y2 xp yp]
-                          (- (* (- x2 x1) (- yp y1)) (* (- y2 y1) (- xp x1))))
+    (let [x1 ^double x1
+          y1 ^double y1
+          x2 ^double x2
+          y2 ^double y2
+          x3 ^double x3
+          y3 ^double y3
           area (double-area x1 y1 x2 y2 x3 y3)]
          (when (> area 0.0)
-            (let [edge-w (fn [x1 y1 x2 y2]
-                            (if (or (> y2 y1) (and (= y2 y1) (< x2 x1)))
-                                0.0
-                                (Math/nextDown 0.0)))
-                  lx (int (Math/floor (min x1 x2 x3)))
+            (let [lx (int (Math/floor (min x1 x2 x3)))
                   lx (max 0 lx)
                   ly (int (Math/floor (min y1 y2 y3)))
                   ly (max 0 ly)
@@ -38,12 +49,12 @@
                   ux (min (framebuffer-width fb) ux)
                   uy (int (Math/ceil (max y1 y2 y3)))
                   uy (min (framebuffer-height fb) uy)
-                  ew1 (edge-w x2 y2 x3 y3)
-                  ew2 (edge-w x3 y3 x1 y1)
-                  ew3 (edge-w x1 y1 x2 y2)
-                  components (framebuffer-components fb)]
-                 (doseq [y (range ly uy)]
-                    (doseq [x (range lx ux)]
+                  ew1 ^double (edge-w x2 y2 x3 y3)
+                  ew2 ^double (edge-w x3 y3 x1 y1)
+                  ew3 ^double (edge-w x1 y1 x2 y2)
+                  components ^long (framebuffer-components fb)]
+                 (doseq [^double y (range ly uy)]
+                    (doseq [^double x (range lx ux)]
                         (let [xc (+ 0.5 x)
                               yc (+ 0.5 y)
                               w1 (double-area x2 y2 x3 y3 xc yc)
