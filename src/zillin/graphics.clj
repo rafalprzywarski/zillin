@@ -79,8 +79,9 @@
                   w2 (double-area x3 y3 x1 y1 xc yc)
                   w3 (double-area x1 y1 x2 y2 xc yc)]
               (when (and (> w1 ew1) (> w2 ew2) (> w3 ew3))
-                (let [vals (shader (/ w1 area) (/ w2 area) (/ w3 area))
-                      z (/ (+ (* w1 z1) (* w2 z2) (* w3 z3)) area)]
-                  (set-component! zb x y 0 z)
-                  (dotimes [i components]
-                    (set-component! fb x y i (vals i))))))))))))
+                (let [z (/ (+ (* w1 z1) (* w2 z2) (* w3 z3)) area)]
+                  (when (<= z (get-component zb x y 0))
+                    (let [vals (shader (/ w1 area) (/ w2 area) (/ w3 area))]
+                      (set-component! zb x y 0 z)
+                      (dotimes [i components]
+                        (set-component! fb x y i (vals i))))))))))))))

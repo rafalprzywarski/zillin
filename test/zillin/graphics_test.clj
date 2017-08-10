@@ -207,9 +207,31 @@
     (let [fb (create-framebuffer 4 4 1)
           zb (create-z-buffer 4 4)
           MAXZ Float/MAX_VALUE]
-      (rasterize-triangle! fb zb (fn [l1 l2 l3] [1]) 0 4 0, 4 0 1, 4 4 0.5)
+      (rasterize-triangle! fb zb (constantly [1]) 0 4 0, 4 0 1, 4 4 0.5)
       (is (= [MAXZ  MAXZ  MAXZ  0.875
               MAXZ  MAXZ  0.625 0.750
               MAXZ  0.375 0.500 0.625
               0.125 0.250 0.375 0.500]
+             (seq (.pixels zb))))))
+  (let [fb (create-framebuffer 4 4 1)
+        zb (create-z-buffer 4 4)
+        MAXZ Float/MAX_VALUE]
+    (rasterize-triangle! fb zb (constantly [8]) 0 4 2, 4 0 0, 4 4 2)
+    (is (= [MAXZ MAXZ MAXZ 0.25
+            MAXZ MAXZ 0.75 0.75
+            MAXZ 1.25 1.25 1.25
+            1.75 1.75 1.75 1.75]
+           (seq (.pixels zb))))
+    (rasterize-triangle! fb zb (constantly [1]) 0 4 0, 4 0 2, 4 4 1)
+    (testing "only rasterising samples with depth lesser or equal to the depth in the Z buffer"
+      (is (= [0.0 0.0 0.0 8.0
+              0.0 0.0 8.0 8.0
+              0.0 1.0 1.0 1.0
+              1.0 1.0 1.0 1.0]
+             (seq (.pixels fb)))))
+    (testing "putting passing depth samples in the Z buffer"
+      (is (= [MAXZ MAXZ MAXZ 0.25
+              MAXZ MAXZ 0.75 0.75
+              MAXZ 0.75 1.00 1.25
+              0.25 0.50 0.75 1.00]
              (seq (.pixels zb)))))))
