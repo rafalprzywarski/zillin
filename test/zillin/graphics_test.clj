@@ -57,8 +57,9 @@
 
 (defn- check-rasterize-triangle [[[x1 y1] [x2 y2] [x3 y3]] [w h] expected]
   (let [fb (create-framebuffer w h 1)
+        zb (create-z-buffer w h)
         shader (fn [l1 l2 l3] [(+ l1 l2 l3)])]
-    (rasterize-triangle! fb shader x1 y1 0 x2 y2 0 x3 y3 0)
+    (rasterize-triangle! fb zb shader x1 y1 0 x2 y2 0 x3 y3 0)
     (is (= (map double expected) (seq (.pixels fb))))))
 
 
@@ -167,20 +168,21 @@
 
 (deftest pixel-shading
   (testing "barycentric coordinates"
-    (let [fb (create-framebuffer 4 4 1)]
-      (rasterize-triangle! fb (fn [l1 l2 l3] [l1]) 4 4 0 0 4 0 4 0 0)
+    (let [fb (create-framebuffer 4 4 1)
+          zb (create-z-buffer 4 4)]
+      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l1]) 4 4 0 0 4 0 4 0 0)
       (is (= [0.00 0.00 0.00 0.00
               0.00 0.00 0.00 0.25
               0.00 0.00 0.25 0.50
               0.00 0.25 0.50 0.75]
              (seq (.pixels fb))))
-      (rasterize-triangle! fb (fn [l1 l2 l3] [l2]) 4 4 0 0 4 0 4 0 0)
+      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l2]) 4 4 0 0 4 0 4 0 0)
       (is (= [0.000 0.000 0.000 0.125
               0.000 0.000 0.375 0.125
               0.000 0.625 0.375 0.125
               0.875 0.625 0.375 0.125]
              (seq (.pixels fb))))
-      (rasterize-triangle! fb (fn [l1 l2 l3] [l3]) 4 4 0 0 4 0 4 0 0)
+      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l3]) 4 4 0 0 4 0 4 0 0)
       (is (= [0.000 0.000 0.000 0.875
               0.000 0.000 0.625 0.625
               0.000 0.375 0.375 0.375
@@ -190,10 +192,24 @@
 
 (deftest rasterising-multiple-components
   (testing "3 components"
-    (let [fb (create-framebuffer 4 4 3)]
-      (rasterize-triangle! fb (fn [l1 l2 l3] [l1 l2 l3]) 4 4 0 0 4 0 4 0 0)
+    (let [fb (create-framebuffer 4 4 3)
+          zb (create-z-buffer 4 4)]
+      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l1 l2 l3]) 4 4 0 0 4 0 4 0 0)
       (is (= [0.000 0.000 0.000, 0.000 0.000 0.000, 0.000 0.000 0.000, 0.000 0.125 0.875
               0.000 0.000 0.000, 0.000 0.000 0.000, 0.000 0.375 0.625, 0.250 0.125 0.625
               0.000 0.000 0.000, 0.000 0.625 0.375, 0.250 0.375 0.375, 0.500 0.125 0.375
               0.000 0.875 0.125, 0.250 0.625 0.125, 0.500 0.375 0.125, 0.750 0.125 0.125]
              (seq (.pixels fb)))))))
+
+
+(deftest depth-test
+  (testing "rasterising depth"
+    (let [fb (create-framebuffer 4 4 1)
+          zb (create-z-buffer 4 4)
+          MAXZ Float/MAX_VALUE]
+      (rasterize-triangle! fb zb (fn [l1 l2 l3] [1]) 0 4 0, 4 0 1, 4 4 0.5)
+      (is (= [MAXZ  MAXZ  MAXZ  0.875
+              MAXZ  MAXZ  0.625 0.750
+              MAXZ  0.375 0.500 0.625
+              0.125 0.250 0.375 0.500]
+             (seq (.pixels zb)))))))

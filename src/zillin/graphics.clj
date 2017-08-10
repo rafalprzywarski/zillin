@@ -47,13 +47,16 @@
      (Math/nextDown 0.0)))
 
 
-(defn rasterize-triangle! [fb shader x1 y1 z1 x2 y2 z2 x3 y3 z3]
+(defn rasterize-triangle! [fb zb shader x1 y1 z1 x2 y2 z2 x3 y3 z3]
   (let [x1 ^double x1
         y1 ^double y1
+        z1 ^double z1
         x2 ^double x2
         y2 ^double y2
+        z2 ^double z2
         x3 ^double x3
         y3 ^double y3
+        z3 ^double z3
         area (double-area x1 y1 x2 y2 x3 y3)]
     (when (> area 0.0)
       (let [lx (int (Math/floor (min x1 x2 x3)))
@@ -76,6 +79,8 @@
                   w2 (double-area x3 y3 x1 y1 xc yc)
                   w3 (double-area x1 y1 x2 y2 xc yc)]
               (when (and (> w1 ew1) (> w2 ew2) (> w3 ew3))
-                (let [vals (shader (/ w1 area) (/ w2 area) (/ w3 area))]
+                (let [vals (shader (/ w1 area) (/ w2 area) (/ w3 area))
+                      z (/ (+ (* w1 z1) (* w2 z2) (* w3 z3)) area)]
+                  (set-component! zb x y 0 z)
                   (dotimes [i components]
                     (set-component! fb x y i (vals i))))))))))))
