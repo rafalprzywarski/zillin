@@ -5,7 +5,8 @@
     (framebuffer-height [this])
     (framebuffer-components [this])
     (get-component [this x y i])
-    (set-component! [this x y i val]))
+    (set-component! [this x y i val])
+    (framebuffer-fill! [this val]))
 
 (deftype ArrayFramebuffer
     [width height components pixels]
@@ -19,10 +20,18 @@
         (let [x ^int x
               y ^int y
               i ^int i]
-             (aset-float (.pixels this) (+ i (* (+ x (* y (.width this))) (.components this))) val))))
+             (aset-float (.pixels this) (+ i (* (+ x (* y (.width this))) (.components this))) val)))
+    (framebuffer-fill! [this val]
+      (java.util.Arrays/fill ^floats (.pixels this) ^float val)))
+
 
 (defn ^zillin.graphics.ArrayFramebuffer create-framebuffer [width height components]
     (ArrayFramebuffer. width height components (float-array (* width height components))))
+
+(defn ^zillin.graphics.ArrayFramebuffer create-z-buffer [width height]
+  (let [zb (create-framebuffer width height 1)]
+    (framebuffer-fill! zb Float/MAX_VALUE)
+    zb))
 
 (defmacro double-area [x1 y1 x2 y2 xp yp]
     `(- (* (- ~x2 ~x1) (- ~yp ~y1)) (* (- ~y2 ~y1) (- ~xp ~x1))))
