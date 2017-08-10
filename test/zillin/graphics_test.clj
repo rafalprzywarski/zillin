@@ -38,6 +38,19 @@
       (is (= 3.75 (get-component fb 7 15 0)))
       (is (= -3.75 (get-component fb 7 15 1)))
       (is (= -3.25 (get-component fb 7 15 2)))))
+  (testing "single component framebuffer component access"
+    (let [fb (create-framebuffer 8 16 1)]
+      (is (= 0.0 (get-component fb 0 0)))
+      (is (= 0.0 (get-component fb 7 3)))
+      (is (= 0.0 (get-component fb 7 15)))
+      (set-component! fb 0 0 0.75)
+      (set-component! fb 7 0 1.75)
+      (set-component! fb 0 15 2.75)
+      (set-component! fb 7 15 3.75)
+      (is (= 0.75 (get-component fb 0 0)))
+      (is (= 1.75 (get-component fb 7 0)))
+      (is (= 2.75 (get-component fb 0 15)))
+      (is (= 3.75 (get-component fb 7 15)))))
   (testing "filling"
     (let [fb (create-framebuffer 2 3 4)]
       (framebuffer-fill! fb 1.25)
@@ -49,10 +62,10 @@
       (is (= 1 (framebuffer-components zb)))))
   (testing "Z buffer filled with max float"
     (let [zb (create-z-buffer 4 4)]
-      (is (= Float/MAX_VALUE (get-component zb 0 0 0)))
-      (is (= Float/MAX_VALUE (get-component zb 1 0 0)))
-      (is (= Float/MAX_VALUE (get-component zb 0 3 0)))
-      (is (= Float/MAX_VALUE (get-component zb 3 3 0))))))
+      (is (= Float/MAX_VALUE (get-component zb 0 0)))
+      (is (= Float/MAX_VALUE (get-component zb 1 0)))
+      (is (= Float/MAX_VALUE (get-component zb 0 3)))
+      (is (= Float/MAX_VALUE (get-component zb 3 3))))))
 
 
 (defn- check-rasterize-triangle [[[x1 y1] [x2 y2] [x3 y3]] [w h] expected]

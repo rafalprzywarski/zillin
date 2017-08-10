@@ -5,8 +5,8 @@
   (framebuffer-width [this])
   (framebuffer-height [this])
   (framebuffer-components [this])
-  (get-component [this x y i])
-  (set-component! [this x y i val])
+  (get-component [this x y] [this x y i])
+  (set-component! [this x y val] [this x y i val])
   (framebuffer-fill! [this val]))
 
 
@@ -16,8 +16,14 @@
   (framebuffer-width [this] (.width this))
   (framebuffer-height [this] (.height this))
   (framebuffer-components [this] (.components this))
+  (get-component [this x y]
+    (aget ^floats (.pixels this) (+ x (* y (.width this)))))
   (get-component [this x y i]
     (aget ^floats (.pixels this) (+ i (* (+ x (* y (.width this))) (.components this)))))
+  (set-component! [this x y val]
+    (let [x ^int x
+          y ^int y]
+      (aset-float (.pixels this) (+ x (* y (.width this))) val)))
   (set-component! [this x y i val]
     (let [x ^int x
           y ^int y
@@ -80,8 +86,8 @@
                   w3 (double-area x1 y1 x2 y2 xc yc)]
               (when (and (> w1 ew1) (> w2 ew2) (> w3 ew3))
                 (let [z (/ (+ (* w1 z1) (* w2 z2) (* w3 z3)) area)]
-                  (when (<= z (get-component zb x y 0))
+                  (when (<= z (get-component zb x y))
                     (let [vals (shader (/ w1 area) (/ w2 area) (/ w3 area))]
-                      (set-component! zb x y 0 z)
+                      (set-component! zb x y z)
                       (dotimes [i components]
                         (set-component! fb x y i (vals i))))))))))))))
