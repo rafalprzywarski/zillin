@@ -1,6 +1,8 @@
 (ns zillin.graphics-test
   (:require [clojure.test :refer :all]
-            [zillin.graphics :refer :all]))
+            [zillin.graphics :refer :all]
+            [zillin.graphics :as g]
+            [zillin.math :as m]))
 
 
 (deftest framebuffer-test
@@ -247,4 +249,25 @@
               MAXZ MAXZ 0.75 0.75
               MAXZ 0.75 1.00 1.25
               0.25 0.50 0.75 1.00]
+             (seq (.pixels zb)))))))
+
+
+(deftest rasterize-triangles-test
+  (testing "rasterising coloured triangles"
+    (let [fb (create-framebuffer 4 4 1)
+          zb (create-z-buffer 4 4)
+          MZ Float/MAX_VALUE
+          triangles [{:a (m/vec3 0 0 2) :b (m/vec3 4 4 2) :c (m/vec3 0 4 2) :color [1.0]}
+                     {:a (m/vec3 0 0 3) :b (m/vec3 4 0 3) :c (m/vec3 0 4 3) :color [2.0]}
+                     {:a (m/vec3 0 0 4) :b (m/vec3 4 0 4) :c (m/vec3 4 4 4) :color [3.0]}]]
+      (rasterize-triangles! fb zb triangles)
+      (is (= [2.0 2.0 2.0 3.0
+              1.0 2.0 3.0 3.0
+              1.0 1.0 3.0 3.0
+              1.0 1.0 1.0 3.0]
+             (seq (.pixels fb))))
+      (is (= [3.0 3.0 3.0 4.0
+              2.0 3.0 4.0 4.0
+              2.0 2.0 4.0 4.0
+              2.0 2.0 2.0 4.0]
              (seq (.pixels zb)))))))

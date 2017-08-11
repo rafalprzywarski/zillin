@@ -1,4 +1,5 @@
-(ns zillin.graphics)
+(ns zillin.graphics
+  (require [zillin.math :as m]))
 
 
 (defprotocol Framebuffer
@@ -91,3 +92,16 @@
                       (set-component! zb x y z)
                       (dotimes [i components]
                         (set-component! fb x y i (vals i))))))))))))))
+
+
+(defn rasterize-triangles! [fb zb triangles]
+  (doseq [t triangles]
+    (let [^zillin.math.Vec3 a (:a t)
+          ^zillin.math.Vec3 b (:b t)
+          ^zillin.math.Vec3 c (:c t)
+          color (:color t)]
+      (rasterize-triangle!
+       fb zb (constantly color)
+       (.x a) (.y a) (.z a)
+       (.x b) (.y b) (.z b)
+       (.x c) (.y c) (.z c)))))
