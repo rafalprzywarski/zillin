@@ -62,19 +62,19 @@
       (is (= 16 (framebuffer-width zb)))
       (is (= 32 (framebuffer-height zb)))
       (is (= 1 (framebuffer-components zb)))))
-  (testing "Z buffer filled with max float"
+  (testing "Z buffer filled with 0"
     (let [zb (create-z-buffer 4 4)]
-      (is (= Float/MAX_VALUE (get-component zb 0 0)))
-      (is (= Float/MAX_VALUE (get-component zb 1 0)))
-      (is (= Float/MAX_VALUE (get-component zb 0 3)))
-      (is (= Float/MAX_VALUE (get-component zb 3 3))))))
+      (is (= 0.0 (get-component zb 0 0)))
+      (is (= 0.0 (get-component zb 1 0)))
+      (is (= 0.0 (get-component zb 0 3)))
+      (is (= 0.0 (get-component zb 3 3))))))
 
 
 (defn- check-rasterize-triangle [[[x1 y1] [x2 y2] [x3 y3]] [w h] expected]
   (let [fb (create-framebuffer w h 1)
         zb (create-z-buffer w h)
         shader (fn [l1 l2 l3] [(+ l1 l2 l3)])]
-    (rasterize-triangle! fb zb shader x1 y1 0 x2 y2 0 x3 y3 0)
+    (rasterize-triangle! fb zb shader x1 y1 1 x2 y2 1 x3 y3 1)
     (is (= (map double expected) (seq (.pixels fb))))))
 
 
@@ -185,19 +185,19 @@
   (testing "barycentric coordinates"
     (let [fb (create-framebuffer 4 4 1)
           zb (create-z-buffer 4 4)]
-      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l1]) 4 4 0 0 4 0 4 0 0)
+      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l1]) 4 4 1 0 4 1 4 0 1)
       (is (= [0.00 0.00 0.00 0.00
               0.00 0.00 0.00 0.25
               0.00 0.00 0.25 0.50
               0.00 0.25 0.50 0.75]
              (seq (.pixels fb))))
-      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l2]) 4 4 0 0 4 0 4 0 0)
+      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l2]) 4 4 1 0 4 1 4 0 1)
       (is (= [0.000 0.000 0.000 0.125
               0.000 0.000 0.375 0.125
               0.000 0.625 0.375 0.125
               0.875 0.625 0.375 0.125]
              (seq (.pixels fb))))
-      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l3]) 4 4 0 0 4 0 4 0 0)
+      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l3]) 4 4 1 0 4 1 4 0 1)
       (is (= [0.000 0.000 0.000 0.875
               0.000 0.000 0.625 0.625
               0.000 0.375 0.375 0.375
@@ -209,7 +209,7 @@
   (testing "3 components"
     (let [fb (create-framebuffer 4 4 3)
           zb (create-z-buffer 4 4)]
-      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l1 l2 l3]) 4 4 0 0 4 0 4 0 0)
+      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l1 l2 l3]) 4 4 1 0 4 1 4 0 1)
       (is (= [0.000 0.000 0.000, 0.000 0.000 0.000, 0.000 0.000 0.000, 0.000 0.125 0.875
               0.000 0.000 0.000, 0.000 0.000 0.000, 0.000 0.375 0.625, 0.250 0.125 0.625
               0.000 0.000 0.000, 0.000 0.625 0.375, 0.250 0.375 0.375, 0.500 0.125 0.375
@@ -218,37 +218,35 @@
 
 
 (deftest depth-test
-  (testing "rasterising depth"
+  (testing "rasterising perspective-correct depth reciprocal"
     (let [fb (create-framebuffer 4 4 1)
-          zb (create-z-buffer 4 4)
-          MAXZ Float/MAX_VALUE]
-      (rasterize-triangle! fb zb (constantly [1]) 0 4 0, 4 0 1, 4 4 0.5)
-      (is (= [MAXZ  MAXZ  MAXZ  0.875
-              MAXZ  MAXZ  0.625 0.750
-              MAXZ  0.375 0.500 0.625
-              0.125 0.250 0.375 0.500]
+          zb (create-z-buffer 4 4)]
+      (rasterize-triangle! fb zb (constantly [1]) 0 4 1, 4 0 4, 4 4 2)
+      (is (= [0.0           0.0           0.0          (/ 44.0 128)
+              0.0           0.0           (/ 68.0 128) (/ 52.0 128)
+              0.0           (/ 92.0 128)  (/ 76.0 128) (/ 60.0 128)
+              (/ 116.0 128) (/ 100.0 128) (/ 84.0 128) (/ 68.0 128)]
              (seq (.pixels zb))))))
   (let [fb (create-framebuffer 4 4 1)
-        zb (create-z-buffer 4 4)
-        MAXZ Float/MAX_VALUE]
-    (rasterize-triangle! fb zb (constantly [8]) 0 4 2, 4 0 0, 4 4 2)
-    (is (= [MAXZ MAXZ MAXZ 0.25
-            MAXZ MAXZ 0.75 0.75
-            MAXZ 1.25 1.25 1.25
-            1.75 1.75 1.75 1.75]
+        zb (create-z-buffer 4 4)]
+    (rasterize-triangle! fb zb (constantly [8]) 0 4 4, 4 0 1, 4 4 4)
+    (is (= [0.0          0.0          0.0          (/ 116.0 128)
+            0.0          0.0          (/ 92.0 128) (/ 92.0 128)
+            0.0          (/ 68.0 128) (/ 68.0 128) (/ 68.0 128)
+            (/ 44.0 128) (/ 44.0 128) (/ 44.0 128) (/ 44.0 128)]
            (seq (.pixels zb))))
-    (rasterize-triangle! fb zb (constantly [1]) 0 4 0, 4 0 2, 4 4 1)
-    (testing "only rasterising samples with depth lesser or equal to the depth in the Z buffer"
+    (rasterize-triangle! fb zb (constantly [1]) 0 4 1, 4 0 4, 4 4 2)
+    (testing "only rasterising samples with depth reciprocal greater or equal to the depth reciprocal in the Z buffer"
       (is (= [0.0 0.0 0.0 8.0
               0.0 0.0 8.0 8.0
-              0.0 1.0 1.0 1.0
+              0.0 1.0 1.0 8.0
               1.0 1.0 1.0 1.0]
              (seq (.pixels fb)))))
     (testing "putting passing depth samples in the Z buffer"
-      (is (= [MAXZ MAXZ MAXZ 0.25
-              MAXZ MAXZ 0.75 0.75
-              MAXZ 0.75 1.00 1.25
-              0.25 0.50 0.75 1.00]
+      (is (= [0.0           0.0           0.0          (/ 116.0 128)
+              0.0           0.0           (/ 92.0 128) (/ 92.0 128)
+              0.0           (/ 92.0 128)  (/ 76.0 128) (/ 68.0 128)
+              (/ 116.0 128) (/ 100.0 128) (/ 84.0 128) (/ 68.0 128)]
              (seq (.pixels zb)))))))
 
 
@@ -256,18 +254,17 @@
   (testing "rasterising coloured triangles"
     (let [fb (create-framebuffer 4 4 1)
           zb (create-z-buffer 4 4)
-          MZ Float/MAX_VALUE
           triangles [{:a (m/vec3 0 0 2) :b (m/vec3 4 4 2) :c (m/vec3 0 4 2) :color [1.0]}
-                     {:a (m/vec3 0 0 3) :b (m/vec3 4 0 3) :c (m/vec3 0 4 3) :color [2.0]}
-                     {:a (m/vec3 0 0 4) :b (m/vec3 4 0 4) :c (m/vec3 4 4 4) :color [3.0]}]]
+                     {:a (m/vec3 0 0 4) :b (m/vec3 4 0 4) :c (m/vec3 0 4 4) :color [2.0]}
+                     {:a (m/vec3 0 0 8) :b (m/vec3 4 0 8) :c (m/vec3 4 4 8) :color [3.0]}]]
       (rasterize-triangles! fb zb triangles)
       (is (= [2.0 2.0 2.0 3.0
               1.0 2.0 3.0 3.0
               1.0 1.0 3.0 3.0
               1.0 1.0 1.0 3.0]
              (seq (.pixels fb))))
-      (is (= [3.0 3.0 3.0 4.0
-              2.0 3.0 4.0 4.0
-              2.0 2.0 4.0 4.0
-              2.0 2.0 2.0 4.0]
+      (is (= [(/ 4.0) (/ 4.0) (/ 4.0) (/ 8.0)
+              (/ 2.0) (/ 4.0) (/ 8.0) (/ 8.0)
+              (/ 2.0) (/ 2.0) (/ 8.0) (/ 8.0)
+              (/ 2.0) (/ 2.0) (/ 2.0) (/ 8.0)]
              (seq (.pixels zb)))))))

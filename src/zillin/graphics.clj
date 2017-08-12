@@ -39,9 +39,7 @@
 
 
 (defn ^zillin.graphics.ArrayFramebuffer create-z-buffer [width height]
-  (let [zb (create-framebuffer width height 1)]
-    (framebuffer-fill! zb Float/MAX_VALUE)
-    zb))
+  (create-framebuffer width height 1))
 
 
 (defmacro double-area [x1 y1 x2 y2 xp yp]
@@ -54,7 +52,12 @@
      (Math/nextDown 0.0)))
 
 
-(defn rasterize-triangle! [fb zb shader x1 y1 z1 x2 y2 z2 x3 y3 z3]
+(defn rasterize-triangle!
+  "Rasterises a triangle.
+  X, Y coordinates are expected to be in screen space.
+  Z coordinates are expected to be in view space.
+  Colour is calculated by shader given barycentric coordinates [l1 l2 l3]."
+  [fb zb shader x1 y1 z1 x2 y2 z2 x3 y3 z3]
   (let [x1 ^double x1
         y1 ^double y1
         z1 ^double z1
@@ -84,10 +87,14 @@
                   yc (+ 0.5 y)
                   w1 (double-area x2 y2 x3 y3 xc yc)
                   w2 (double-area x3 y3 x1 y1 xc yc)
-                  w3 (double-area x1 y1 x2 y2 xc yc)]
+                  w3 (- area w1 w2)]
               (when (and (> w1 ew1) (> w2 ew2) (> w3 ew3))
-                (let [z (/ (+ (* w1 z1) (* w2 z2) (* w3 z3)) area)]
-                  (when (<= z (get-component zb x y))
+                (let [z1z2 (* z1 z2)
+                      z1z3 (* z1 z3)
+                      z2z3 (* z2 z3)
+                      z1z2z3area (* z1z2 z3 area)
+                      z (/ (+ (* w1 z2z3) (* w2 z1z3) (* w3 z1z2)) z1z2z3area)]
+                  (when (>= z (get-component zb x y))
                     (let [vals (shader (/ w1 area) (/ w2 area) (/ w3 area))]
                       (set-component! zb x y z)
                       (dotimes [i components]
