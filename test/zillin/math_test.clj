@@ -68,3 +68,8 @@
                          3 4 5 6)
                    (vec3 3 4 5))
            (vec3 (/ 30.0 56) (/ 82.0 56) (/ 34.0 56))))))
+
+(deftest transform-test
+  (testing "translation"
+    (is (= (mvmult (translation (vec3 30 50 70)) (vec3 7 8 9))
+           (vec3 37 58 79)))))
