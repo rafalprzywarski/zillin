@@ -60,13 +60,10 @@
   [fb zb shader x1 y1 z1 x2 y2 z2 x3 y3 z3]
   (let [x1 ^double x1
         y1 ^double y1
-        z1 ^double z1
         x2 ^double x2
         y2 ^double y2
-        z2 ^double z2
         x3 ^double x3
         y3 ^double y3
-        z3 ^double z3
         area (double-area x1 y1 x2 y2 x3 y3)]
     (when (> area 0.0)
       (let [lx (int (Math/floor (min x1 x2 x3)))
@@ -80,7 +77,14 @@
             ew1 ^double (edge-w x2 y2 x3 y3)
             ew2 ^double (edge-w x3 y3 x1 y1)
             ew3 ^double (edge-w x1 y1 x2 y2)
-            components ^long (framebuffer-components fb)]
+            components ^long (framebuffer-components fb)
+            z1 ^double z1
+            z2 ^double z2
+            z3 ^double z3
+            z1z2 (* z1 z2)
+            z1z3 (* z1 z3)
+            z2z3 (* z2 z3)
+            z1z2z3area (* z1z2 z3 area)]
         (doseq [^double y (range ly uy)]
           (doseq [^double x (range lx ux)]
             (let [xc (+ 0.5 x)
@@ -89,11 +93,7 @@
                   w2 (double-area x3 y3 x1 y1 xc yc)
                   w3 (- area w1 w2)]
               (when (and (> w1 ew1) (> w2 ew2) (> w3 ew3))
-                (let [z1z2 (* z1 z2)
-                      z1z3 (* z1 z3)
-                      z2z3 (* z2 z3)
-                      z1z2z3area (* z1z2 z3 area)
-                      w1z2z3 (* w1 z2z3)
+                (let [w1z2z3 (* w1 z2z3)
                       z1w2z3 (* w2 z1z3)
                       z1z2w3 (* w3 z1z2)
                       wzs (+ w1z2z3 z1w2z3 z1z2w3)
