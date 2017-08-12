@@ -202,6 +202,27 @@
               0.000 0.000 0.625 0.625
               0.000 0.375 0.375 0.375
               0.125 0.125 0.125 0.125]
+             (seq (.pixels fb))))))
+  (testing "perspective-correct barycentric coordinates"
+    (let [fb (create-framebuffer 4 4 1)
+          zb (create-z-buffer 4 4)]
+      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l1]) 4 4 2 0 4 1 4 0 4)
+      (is (= (map float [0.0 0.0          0.0         0.0
+                         0.0 0.0          0.0         (/ 16 52.0)
+                         0.0 0.0          (/ 16 76.0) (/ 32 60.0)
+                         0.0 (/ 16 100.0) (/ 32 84.0) (/ 48 68.0)])
+             (seq (.pixels fb))))
+      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l2]) 4 4 2 0 4 1 4 0 4)
+      (is (= (map float [0.0           0.0          0.0         (/ 16 44.0)
+                         0.0           0.0          (/ 48 68.0) (/ 16 52.0)
+                         0.0           (/ 80 92.0)  (/ 48 76.0) (/ 16 60.0)
+                         (/ 112 116.0) (/ 80 100.0) (/ 48 84.0) (/ 16 68.0)])
+             (seq (.pixels fb))))
+      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l3]) 4 4 2 0 4 1 4 0 4)
+      (is (= (map float [0.0         0.0         0.0         (/ 28 44.0)
+                         0.0         0.0         (/ 20 68.0) (/ 20 52.0)
+                         0.0         (/ 12 92.0) (/ 12 76.0) (/ 12 60.0)
+                         (/ 4 116.0) (/ 4 100.0) (/ 4 84.0)  (/ 4 68.0)])
              (seq (.pixels fb)))))))
 
 

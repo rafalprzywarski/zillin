@@ -93,9 +93,16 @@
                       z1z3 (* z1 z3)
                       z2z3 (* z2 z3)
                       z1z2z3area (* z1z2 z3 area)
-                      z (/ (+ (* w1 z2z3) (* w2 z1z3) (* w3 z1z2)) z1z2z3area)]
+                      w1z2z3 (* w1 z2z3)
+                      z1w2z3 (* w2 z1z3)
+                      z1z2w3 (* w3 z1z2)
+                      wzs (+ w1z2z3 z1w2z3 z1z2w3)
+                      z (/ wzs z1z2z3area)]
                   (when (>= z (get-component zb x y))
-                    (let [vals (shader (/ w1 area) (/ w2 area) (/ w3 area))]
+                    (let [l1 (/ w1z2z3 wzs)
+                          l2 (/ z1w2z3 wzs)
+                          l3 (- 1.0 l1 l2)
+                          vals (shader l1 l2 l3)]
                       (set-component! zb x y z)
                       (dotimes [i components]
                         (set-component! fb x y i (vals i))))))))))))))
