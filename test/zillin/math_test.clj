@@ -83,6 +83,23 @@
   (testing "translation"
     (is (= (vec3 37 58 79)
            (mvmult (translation (vec3 30 50 70)) (vec3 7 8 9)))))
+  (testing "rotation"
+    (let [eps (- (Math/nextUp 1.0) 1.0)]
+      (is (>= (* 5 eps)
+              (length (sub (vec3 -3 5 4)
+                           (mvmult (rotation (vec3 0 0 10) Math/PI) (vec3 3 -5 4))))))
+      (is (>= (* 5 eps)
+              (length (sub (vec3 5 3 4)
+                           (mvmult (rotation (vec3 0 0 10) (* 0.5 Math/PI)) (vec3 3 -5 4))))))
+      (is (>= (* 5 eps)
+              (length (sub (vec3 -5 -3 4)
+                           (mvmult (rotation (vec3 0 0 10) (* -0.5 Math/PI)) (vec3 3 -5 4))))))
+      (is (>= (* 10 eps)
+              (length (sub (vec3 4 3 -5)
+                           (mvmult (rotation (vec3 5 5 5) (/ Math/PI 1.5)) (vec3 3 -5 4))))))
+      (is (>= (* 16 eps)
+              (length (sub (vec3 -5 4 3)
+                           (mvmult (rotation (vec3 5 5 5) (/ Math/PI 0.75)) (vec3 3 -5 4))))))))
   (testing "perspective projection"
     (let [proj (perspective-projection 1.0 32 24)
           examples [

@@ -27,7 +27,7 @@
   (Math/sqrt (dot v v)))
 
 
-(defn normalize [^Vec3 v]
+(defn ^Vec3 normalize [^Vec3 v]
   (let [len (length v)]
     (Vec3. (/ (.x v) len) (/ (.y v) len) (/ (.z v) len))))
 
@@ -82,6 +82,26 @@
         0 1 0 (.y v)
         0 0 1 (.z v)
         0 0 0 1))
+
+
+(defn rotation [^Vec3 axis ^double angle]
+  (let [cosa (Math/cos angle)
+        one-cosa (- 1 cosa)
+        sina (Math/sin angle)
+        axis (normalize axis)
+        x (.x axis)
+        y (.y axis)
+        z (.z axis)
+        xycosa (* x y one-cosa)
+        xzcosa (* x z one-cosa)
+        yzcosa (* y z one-cosa)
+        xsina (* x sina)
+        ysina (* y sina)
+        zsina (* z sina)]
+    (mat4 (+ cosa (* x x one-cosa)) (- xycosa zsina)          (+ xzcosa ysina)          0
+          (+ xycosa zsina)          (+ cosa (* y y one-cosa)) (- yzcosa xsina)          0
+          (- xzcosa ysina)          (+ yzcosa xsina)          (+ cosa (* z z one-cosa)) 0
+          0                         0                         0                         1)))
 
 (defn perspective-projection [^double tan-angle ^double width ^double height]
   (let [d (/ height (* 2 tan-angle))]
