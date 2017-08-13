@@ -71,5 +71,24 @@
 
 (deftest transform-test
   (testing "translation"
-    (is (= (mvmult (translation (vec3 30 50 70)) (vec3 7 8 9))
-           (vec3 37 58 79)))))
+    (is (= (vec3 37 58 79)
+           (mvmult (translation (vec3 30 50 70)) (vec3 7 8 9)))))
+  (testing "perspective projection"
+    (let [proj (perspective-projection 1.0 32 24)
+          examples [
+                    [[0 0 7] [16 12 (/ 7.0)]]
+                    [[0 0 16] [16 12 (/ 16.0)]]
+                    [[12 12 12] [28 24 (/ 12.0)]]
+                    [[-12 12 12] [4 24 (/ 12.0)]]
+                    [[-12 -12 12] [4 0 (/ 12.0)]]
+                    [[12 -12 12] [28 0 (/ 12.0)]]
+                    [[12 12 24] [22 18 (/ 24.0)]]
+                    [[-12 12 24] [10 18 (/ 24.0)]]
+                    [[-12 -12 24] [10 6 (/ 24.0)]]
+                    [[12 -12 24] [22 6 (/ 24.0)]]]]
+      (doseq [[source projected] examples]
+        (is (= (apply vec3 projected)
+               (mvmult proj (apply vec3 source))))))
+    (let [proj (perspective-projection 0.5 16 8)]
+      (is (= (vec3 11.5 6.5 (/ 16.0))
+             (mvmult proj (vec3 7 5 16)))))))

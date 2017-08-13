@@ -72,3 +72,10 @@
         0 1 0 (.y v)
         0 0 1 (.z v)
         0 0 0 1))
+
+(defn perspective-projection [^double tan-angle ^double width ^double height]
+  (let [d (/ height (* 2 tan-angle))]
+    (mat4 d 0 (/ width 2) 0
+          0 d (/ height 2) 0
+          0 0 0 1
+          0 0 1 0)))
