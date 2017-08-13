@@ -25,7 +25,17 @@
     (is (= (cross (vec3 0 0 1) (vec3 1 0 0)) (vec3 0 1 0)))
     (is (=
          (cross (vec3 3 4 5) (vec3 -2.5 1.5 3.5))
-         (vec3 (- (* 4 3.5) (* 5 1.5)) (- (* 5 -2.5) (* 3 3.5)) (- (* 3 1.5) (* 4 -2.5)))))))
+         (vec3 (- (* 4 3.5) (* 5 1.5)) (- (* 5 -2.5) (* 3 3.5)) (- (* 3 1.5) (* 4 -2.5))))))
+  (testing "length"
+    (is (= 1.0 (length (vec3 1 0 0))))
+    (is (= 3.0 (length (vec3 3 0 0))))
+    (is (= 5.0 (length (vec3 0 3 4))))
+    (is (= 5.0 (length (vec3 -3 0 4)))))
+  (testing "normalisation"
+    (is (= (vec3 1 0 0) (normalize (vec3 1 0 0))))
+    (is (= (vec3 1 0 0) (normalize (vec3 3 0 0))))
+    (is (= (vec3 0 (/ 3.0 5) (/ 4.0 5)) (normalize (vec3 0 3 4))))
+    (is (= (vec3 (/ -3.0 5) 0 (/ 4.0 5)) (normalize (vec3 -3 0 4))))))
 
 (deftest mat4-test
   (testing "multiplication"

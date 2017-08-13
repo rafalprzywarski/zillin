@@ -22,6 +22,16 @@
    (* (.y l) (.y r))
    (* (.z l) (.z r))))
 
+
+(defn length [^Vec3 v]
+  (Math/sqrt (dot v v)))
+
+
+(defn normalize [^Vec3 v]
+  (let [len (length v)]
+    (Vec3. (/ (.x v) len) (/ (.y v) len) (/ (.z v) len))))
+
+
 (defn det [a b c d] (- (* a d) (* b c)))
 
 (defn cross [^Vec3 l ^Vec3 r]
