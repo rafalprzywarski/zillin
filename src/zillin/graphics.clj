@@ -55,9 +55,9 @@
 (defn rasterize-triangle!
   "Rasterises a triangle.
   X, Y coordinates are expected to be in screen space.
-  Z coordinates are expected to be in view space.
+  Z coordinates' reciprocals are expected to be in view space.
   Colour is calculated by shader given barycentric coordinates [l1 l2 l3]."
-  [fb zb shader x1 y1 z1 x2 y2 z2 x3 y3 z3]
+  [fb zb shader x1 y1 rz1 x2 y2 rz2 x3 y3 rz3]
   (let [x1 ^double x1
         y1 ^double y1
         x2 ^double x2
@@ -78,13 +78,9 @@
             ew2 ^double (edge-w x3 y3 x1 y1)
             ew3 ^double (edge-w x1 y1 x2 y2)
             components ^long (framebuffer-components fb)
-            z1 ^double z1
-            z2 ^double z2
-            z3 ^double z3
-            z1z2 (* z1 z2)
-            z1z3 (* z1 z3)
-            z2z3 (* z2 z3)
-            z1z2z3area (* z1z2 z3 area)]
+            rz1 ^double rz1
+            rz2 ^double rz2
+            rz3 ^double rz3]
         (doseq [^double y (range ly uy)]
           (doseq [^double x (range lx ux)]
             (let [xc (+ 0.5 x)
@@ -93,17 +89,17 @@
                   w2 (double-area x3 y3 x1 y1 xc yc)
                   w3 (- area w1 w2)]
               (when (and (> w1 ew1) (> w2 ew2) (> w3 ew3))
-                (let [w1z2z3 (* w1 z2z3)
-                      z1w2z3 (* w2 z1z3)
-                      z1z2w3 (* w3 z1z2)
-                      wzs (+ w1z2z3 z1w2z3 z1z2w3)
-                      z (/ wzs z1z2z3area)]
-                  (when (>= z (get-component zb x y))
-                    (let [l1 (/ w1z2z3 wzs)
-                          l2 (/ z1w2z3 wzs)
+                (let [rz1w1 (* rz1 w1)
+                      rz2w2 (* rz2 w2)
+                      rz3w3 (* rz3 w3)
+                      rzarea (+ rz1w1 rz2w2 rz3w3)
+                      rz (/ rzarea area)]
+                  (when (>= rz (get-component zb x y))
+                    (let [l1 (/ rz1w1 rzarea)
+                          l2 (/ rz2w2 rzarea)
                           l3 (- 1.0 l1 l2)
                           vals (shader l1 l2 l3)]
-                      (set-component! zb x y z)
+                      (set-component! zb x y rz)
                       (dotimes [i components]
                         (set-component! fb x y i (vals i))))))))))))))
 

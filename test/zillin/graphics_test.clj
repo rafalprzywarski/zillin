@@ -206,19 +206,19 @@
   (testing "perspective-correct barycentric coordinates"
     (let [fb (create-framebuffer 4 4 1)
           zb (create-z-buffer 4 4)]
-      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l1]) 4 4 2 0 4 1 4 0 4)
+      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l1]) 4 4 0.5 0 4 1 4 0 0.25)
       (is (= (map float [0.0 0.0          0.0         0.0
                          0.0 0.0          0.0         (/ 16 52.0)
                          0.0 0.0          (/ 16 76.0) (/ 32 60.0)
                          0.0 (/ 16 100.0) (/ 32 84.0) (/ 48 68.0)])
              (seq (.pixels fb))))
-      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l2]) 4 4 2 0 4 1 4 0 4)
+      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l2]) 4 4 0.5 0 4 1 4 0 0.25)
       (is (= (map float [0.0           0.0          0.0         (/ 16 44.0)
                          0.0           0.0          (/ 48 68.0) (/ 16 52.0)
                          0.0           (/ 80 92.0)  (/ 48 76.0) (/ 16 60.0)
                          (/ 112 116.0) (/ 80 100.0) (/ 48 84.0) (/ 16 68.0)])
              (seq (.pixels fb))))
-      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l3]) 4 4 2 0 4 1 4 0 4)
+      (rasterize-triangle! fb zb (fn [l1 l2 l3] [l3]) 4 4 0.5 0 4 1 4 0 0.25)
       (is (= (map float [0.0         0.0         0.0         (/ 28 44.0)
                          0.0         0.0         (/ 20 68.0) (/ 20 52.0)
                          0.0         (/ 12 92.0) (/ 12 76.0) (/ 12 60.0)
@@ -242,7 +242,7 @@
   (testing "rasterising perspective-correct depth reciprocal"
     (let [fb (create-framebuffer 4 4 1)
           zb (create-z-buffer 4 4)]
-      (rasterize-triangle! fb zb (constantly [1]) 0 4 1, 4 0 4, 4 4 2)
+      (rasterize-triangle! fb zb (constantly [1]) 0 4 1, 4 0 0.25, 4 4 0.5)
       (is (= [0.0           0.0           0.0          (/ 44.0 128)
               0.0           0.0           (/ 68.0 128) (/ 52.0 128)
               0.0           (/ 92.0 128)  (/ 76.0 128) (/ 60.0 128)
@@ -250,13 +250,13 @@
              (seq (.pixels zb))))))
   (let [fb (create-framebuffer 4 4 1)
         zb (create-z-buffer 4 4)]
-    (rasterize-triangle! fb zb (constantly [8]) 0 4 4, 4 0 1, 4 4 4)
+    (rasterize-triangle! fb zb (constantly [8]) 0 4 0.25, 4 0 1, 4 4 0.25)
     (is (= [0.0          0.0          0.0          (/ 116.0 128)
             0.0          0.0          (/ 92.0 128) (/ 92.0 128)
             0.0          (/ 68.0 128) (/ 68.0 128) (/ 68.0 128)
             (/ 44.0 128) (/ 44.0 128) (/ 44.0 128) (/ 44.0 128)]
            (seq (.pixels zb))))
-    (rasterize-triangle! fb zb (constantly [1]) 0 4 1, 4 0 4, 4 4 2)
+    (rasterize-triangle! fb zb (constantly [1]) 0 4 1, 4 0 0.25, 4 4 0.5)
     (testing "only rasterising samples with depth reciprocal greater or equal to the depth reciprocal in the Z buffer"
       (is (= [0.0 0.0 0.0 8.0
               0.0 0.0 8.0 8.0
@@ -275,9 +275,9 @@
   (testing "rasterising coloured triangles"
     (let [fb (create-framebuffer 4 4 1)
           zb (create-z-buffer 4 4)
-          triangles [{:a (m/vec3 0 0 2) :b (m/vec3 4 4 2) :c (m/vec3 0 4 2) :color [1.0]}
-                     {:a (m/vec3 0 0 4) :b (m/vec3 4 0 4) :c (m/vec3 0 4 4) :color [2.0]}
-                     {:a (m/vec3 0 0 8) :b (m/vec3 4 0 8) :c (m/vec3 4 4 8) :color [3.0]}]]
+          triangles [{:a (m/vec3 0 0 0.5) :b (m/vec3 4 4 0.5) :c (m/vec3 0 4 0.5) :color [1.0]}
+                     {:a (m/vec3 0 0 0.25) :b (m/vec3 4 0 0.25) :c (m/vec3 0 4 0.25) :color [2.0]}
+                     {:a (m/vec3 0 0 0.125) :b (m/vec3 4 0 0.125) :c (m/vec3 4 4 0.125) :color [3.0]}]]
       (rasterize-triangles! fb zb triangles)
       (is (= [2.0 2.0 2.0 3.0
               1.0 2.0 3.0 3.0
