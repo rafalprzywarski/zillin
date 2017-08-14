@@ -41,6 +41,24 @@
 (defn ^zillin.graphics.ArrayFramebuffer create-z-buffer [width height]
   (create-framebuffer width height 1))
 
+(defn ^zillin.graphics.ArrayFramebuffer downsample-framebuffer [n fb]
+  (let [width (/ (framebuffer-width fb) n)
+        height (/ (framebuffer-height fb) n)
+        nc (framebuffer-components fb)
+        sfb (create-framebuffer width height nc)]
+    (doseq [y (range height)]
+      (doseq [x (range width)]
+        (let [bx (* x n)
+              by (* y n)
+              s (double-array nc)]
+          (doseq [sy (range n)]
+            (doseq [sx (range n)]
+              (doseq [c (range nc)]
+                (aset-double s c (+ (aget s c) (get-component fb (+ bx sx) (+ by sy) c))))))
+          (doseq [c (range nc)]
+            (set-component! sfb x y c (/ (aget s c) (* n n)))))))
+    sfb))
+
 
 (defmacro double-area [x1 y1 x2 y2 xp yp]
   `(- (* (- ~x2 ~x1) (- ~yp ~y1)) (* (- ~y2 ~y1) (- ~xp ~x1))))
