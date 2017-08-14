@@ -64,7 +64,33 @@
            (mat4 50  40  30 50
                  130 104 78 122
                  50  38  26 24
-                 90  72  54 86))))
+                 90  72  54 86)))
+    (let [A (mat4 9 1 8 2
+                  5 8 2 2
+                  9 7 4 2
+                  7 3 6 5)
+          B (mat4 4 9 8 6
+                  3 8 5 7
+                  5 4 3 9
+                  6 4 7 4)
+          C (mat4 1 0 6 6
+                  9 6 3 3
+                  9 5 7 8
+                  2 3 1 1)
+          D (mat4 1 1 7 4
+                  5 3 4 2
+                  7 4 6 9
+                  2 7 4 1)]
+      (is (= (mmult (mmult A B) C) (mmult A B C)))
+      (is (= (mmult (mmult (mmult A B) C) D) (mmult A B C D)))
+      (is (= A (mmult A))))
+    (is (= (mat4 1 0 0 0
+                 0 1 0 0
+                 0 0 1 0
+                 0 0 0 1)
+           (mmult))))
+
+
   (testing "matrix vector multiplication"
     (is (= (mvmult (mat4 1 0 0 0
                          0 1 0 0
